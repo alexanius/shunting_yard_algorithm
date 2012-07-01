@@ -1,1 +1,16 @@
-realisation of translation to polish notation algorythm in OCaml
+This is experimental realisation of Dijkstra shunting yard algorithm of
+translating arithmetical expression into polish notation. This is just a test
+for me to study OCaml language.
+
+For compiling and launching program you can enter the following:
+
+
+$ ocamlc str.cma toPolish.ml && ./a.out
+1 + 2 + ( 4 + 3 )
+1
+2
+4
+3
++
++
++
