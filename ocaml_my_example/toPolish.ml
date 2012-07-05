@@ -3,10 +3,27 @@
 	into polish notation
 *)
 
-type operator = Plus
-	| Minus
-	| Mult
-	| Div;;
+type association = Left
+	| Right;;
+
+(*base class for all operators*)
+class operator (n_arity:int) (assoc:association) (priority:int) (str:string) =
+	object
+		val arity_ = n_arity
+		val assoc_ = assoc
+		val priority_ = priority
+		val string_ = str
+
+		method arity = arity_
+		method assoc = assoc_
+		method priority = priority_
+		method to_string = string_
+	end;;
+
+class plus = object inherit operator 2 Left 2 "+" end;;
+class minus = object inherit operator 2 Left 2 "-" end;;
+class mult = object inherit operator 2 Left 3 "*" end;;
+class div = object inherit operator 2 Left 3 "/" end;;
 
 type token = Operator of operator
 	| LBracket
@@ -20,8 +37,19 @@ let transformTokens = fun tokList ->
 		[] -> polTokList @ stack													(*when tokens have ended just add stack to the end of result token list*)
 		| h::t ->
 			(match h with
-			Digit h -> nextTok t (polTokList @ [Digit h]) stack						(*when next token is digit just add it to the result token list*)
-			| Operator h -> nextTok t polTokList ([Operator h] @ stack)				(*when next token is operator put it onto stack*)
+			Digit d -> nextTok t (polTokList @ [Digit d]) stack						(*when next token is digit just add it to the result token list*)
+			| Operator op ->
+				(match stack with
+				stackHead::stackTail ->
+					(match stackHead with															(*while operator op2 is on the stack top *)
+					Operator op2 when
+						( op#assoc = Left && op#priority <= op2#priority ) ||
+						( op#assoc = Right && op#priority < op2#priority ) ->
+						nextTok newTokList (polTokList @ [Operator op2]) stackTail		(*move other oprators from stack to result list*)
+					| _ -> nextTok t polTokList ([Operator op] @ stack)								(*if no operator on stack, add crurren op to stack and carry on*)
+					)
+				| [] -> nextTok t polTokList ([Operator op] @ stack)				(*when next token is operator put it onto stack*)
+				)
 			| LBracket -> nextTok t polTokList ([LBracket] @ stack)					(*when next token is open bracket than put in onto stack*)
 			| RBracket ->
 				(match stack with													(*when next token is close bracket then look at stack*)
@@ -37,43 +65,32 @@ let transformTokens = fun tokList ->
 			)
 		)
 	in nextTok tokList [] []
-	;
 ;;
-
-(*operator printing function*)
-let print_operator = fun op ->
-	match op with
-	Plus -> print_string "+\n"
-	| Minus -> print_string "-\n"
-	| Mult -> print_string "*\n"
-	| Div -> print_string "/\n";;
 
 (*token printing function*)
 let print_token = fun tok ->
 	match tok with
-	| Operator op -> print_operator op;
-	| LBracket -> print_string "(\n";
-	| RBracket -> print_string ")\n";
-	| Digit tok ->  print_int tok; print_newline ();;
-
-let string_of_operator = fun str ->
-	match str with
-	"+" -> Plus
-	| "-" -> Minus
-	| "*" -> Mult
-	| "/" -> Div
-	| _ -> failwith "wrong operator";;
+	LBracket -> print_string "(";
+	| RBracket -> print_string ")";
+	| Digit tok ->  print_int tok;
+	| Operator op -> print_string op#to_string;
+	;;
 
 (*translating string into token*)
 let	string_of_token = fun str ->
 	match str with
-	"+" | "-" | "*" | "/" -> Operator (string_of_operator str)
-	| "(" -> LBracket
-	| ")" -> RBracket
-	| _ -> Digit (int_of_string str);;
+	"+" -> Operator (new plus);
+	| "-" -> Operator (new minus);
+	| "*" -> Operator (new mult);
+	| "/" -> Operator (new div);
+	| "(" -> LBracket;
+	| ")" -> RBracket;
+	| _ -> Digit (int_of_string str);
+	;;
 
 (*reading line and translating it into token list*)
 let line = read_line()
 in let stringList = Str.split (Str.regexp "[ \t]+") line
 in let tokenList = List.map string_of_token stringList
 in List.map print_token (transformTokens tokenList);;
+print_newline ();;
