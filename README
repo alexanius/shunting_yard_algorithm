@@ -2,15 +2,6 @@ This is experimental realisation of Dijkstra shunting yard algorithm of
 translating arithmetical expression into polish notation. This is just a test
 for me to study OCaml language.
 
-For compiling and launching program you can enter the following:
-
-
-$ ocamlc str.cma toPolish.ml && ./a.out
-1 + 2 + ( 4 + 3 )
-1
-2
-4
-3
-+
-+
-+
+In the folder tests you can find script "run_tests.sh" that launches my and the
+wiki realisations of the algorythm on few eamples, compares the output and exits
+if something is wrong

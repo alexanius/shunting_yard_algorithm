@@ -189,7 +189,7 @@ bool shunting_yard(const char *input, char *output)
     *outpos = 0; // Null terminator
     return true;
 }
-
+/*
 bool execution_order(const char *input) {
     printf("order:\n");
     const char *strpos = input, *strend = input + strlen(input);
@@ -265,7 +265,7 @@ bool execution_order(const char *input) {
         // (Error) The user input has too many values.
         return false;
 }
-
+*/
 int main() {
     // functions: A() B(a) C(a, b), D(a, b, c) ...
     // identifiers: 0 1 2 3 ... and a b c d e ...
@@ -274,11 +274,11 @@ int main() {
 	gets(input);
 	
     char output[128];
-    printf("input: %s\n", input);
+//    printf("input: %s\n", input);
     if(shunting_yard(input, output))    {
-        printf("output: %s\n", output);
-        if(!execution_order(output))
-            printf("\nInvalid input\n");
+        printf("%s\n", output);
+//        if(!execution_order(output))
+//            printf("\nInvalid input\n");
     }
     return 0;
 }
