@@ -7,27 +7,32 @@ type association = Left
 	| Right;;
 
 (*base class for all operators*)
-class operator (n_arity:int) (assoc:association) (priority:int) (str:string) =
+class operator (assoc:association) (priority:int) (str:string) =
 	object
-		val arity_ = n_arity
 		val assoc_ = assoc
 		val priority_ = priority
 		val string_ = str
 
-		method arity = arity_
 		method assoc = assoc_
 		method priority = priority_
 		method to_string = string_
 	end;;
 
-class plus = object inherit operator 2 Left 2 "+" end;;
-class minus = object inherit operator 2 Left 2 "-" end;;
-class mult = object inherit operator 2 Left 3 "*" end;;
-class div = object inherit operator 2 Left 3 "/" end;;
+(*operators itself*)
+(*class comma = object inherit operator Left 0 "," end;;*)
+class eq = object inherit operator Right 1 "=" end;;
+class plus = object inherit operator Left 2 "+" end;;
+class minus = object inherit operator Left 2 "-" end;;
+class mult = object inherit operator Left 3 "*" end;;
+class div = object inherit operator Left 3 "/" end;;
+class mod_op = object inherit operator Left 3 "%" end;;				(*because 'mod' is keyword*)
+class not = object inherit operator Right 4 "!" end;;
+class func name = object inherit operator Right 5 name end;;		(*when using a function you should give it name*)
 
 type token = Operator of operator
 	| LBracket
 	| RBracket
+	| Comma
 	| Digit of int;;
 
 (*tranlating algorythm*)
@@ -38,6 +43,15 @@ let transformTokens = fun tokList ->
 		| h::t ->
 			(match h with
 			Digit d -> nextTok t (polTokList @ [Digit d]) stack						(*when next token is digit just add it to the result token list*)
+			| Comma ->
+				(match stack with
+				[] -> failwith "err"												(*if stack is empty - error occured*)
+				| stackHead::stackTail ->
+					(match stackHead with	
+						LBracket -> nextTok t polTokList stack
+						| _ -> nextTok newTokList (polTokList @ [stackHead]) stackTail		(*move other oprators from stack to result list*)
+					)
+				)
 			| Operator op ->
 				(match stack with
 				stackHead::stackTail ->
@@ -72,9 +86,10 @@ let print_token = fun tok ->
 	match tok with
 	LBracket -> print_string "(";
 	| RBracket -> print_string ")";
+	| Comma -> print_string ",";
 	| Digit tok ->  print_int tok;
 	| Operator op -> print_string op#to_string;
-	;;
+;;
 
 (*translating string into token*)
 let	string_of_token = fun str ->
@@ -83,10 +98,15 @@ let	string_of_token = fun str ->
 	| "-" -> Operator (new minus);
 	| "*" -> Operator (new mult);
 	| "/" -> Operator (new div);
+	| "%" -> Operator (new mod_op);
+	| "!" -> Operator (new not);
+	| "=" -> Operator (new eq);
+	| "," -> Comma;
 	| "(" -> LBracket;
 	| ")" -> RBracket;
+	| _ as name when ((String.get name 0) >= 'A') && ((String.get name 0) <= 'Z') -> Operator (new func name);
 	| _ -> Digit (int_of_string str);
-	;;
+;;
 
 (*reading line and translating it into token list*)
 let line = read_line()

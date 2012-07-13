@@ -270,7 +270,9 @@ int main() {
     // functions: A() B(a) C(a, b), D(a, b, c) ...
     // identifiers: 0 1 2 3 ... and a b c d e ...
     // operators: = - + / * % !
-    const char *input = "( 1 + 2 + 3 ) * 4 / 5 + 6 * 7 / ( 8 + 9 )";
+    char input[128];
+	gets(input);
+	
     char output[128];
     printf("input: %s\n", input);
     if(shunting_yard(input, output))    {
